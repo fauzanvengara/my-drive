@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Drive</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="app">
+  <!-- Sidebar overlay for mobile -->
+  <div id="sidebar-overlay" role="presentation"></div>
+
+  <!-- Sidebar -->
+  <aside id="sidebar" role="navigation" aria-label="Main navigation">
+    <div class="sidebar-brand">
+      <div class="brand-icon">
+        <span class="material-symbols-outlined" style="font-size:20px">cloud</span>
+      </div>
+      My Drive
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-item active" data-view="home">
+        <span class="material-symbols-outlined">home</span>Home
+      </div>
+      <div class="nav-item" data-view="myfiles">
+        <span class="material-symbols-outlined">folder</span>My Files
+      </div>
+      <div class="nav-item" data-view="recent">
+        <span class="material-symbols-outlined">schedule</span>Recent
+      </div>
+      <div class="nav-item" data-view="folders">
+        <span class="material-symbols-outlined">folder_copy</span>Folders
+      </div>
+      <div class="nav-item" data-view="shared">
+        <span class="material-symbols-outlined">link</span>Shared Links
+      </div>
+    </nav>
+    <div class="nav-divider"></div>
+    <div class="sidebar-section-title">Folders</div>
+    <div class="folder-tree" id="folder-tree"></div>
+    <div class="nav-divider"></div>
+    <nav class="sidebar-nav">
+      <div class="nav-item" data-view="settings">
+        <span class="material-symbols-outlined">settings</span>Settings
+      </div>
+    </nav>
+  </aside>
+
+  <!-- Main Content -->
+  <main id="main">
+    <!-- Header -->
+    <header id="header">
+      <button id="menu-toggle" aria-label="Toggle menu">
+        <span class="material-symbols-outlined">menu</span>
+      </button>
+      <div id="breadcrumbs"></div>
+      <div class="search-wrap">
+        <span class="material-symbols-outlined">search</span>
+        <input type="text" id="search-input" placeholder="Search files and folders" aria-label="Search">
+      </div>
+      <div class="header-actions">
+        <button class="icon-btn" id="view-toggle" aria-label="Toggle view" title="Toggle view">
+          <span class="material-symbols-outlined">grid_view</span>
+        </button>
+        <button class="icon-btn" id="theme-toggle" aria-label="Toggle theme" title="Toggle theme">
+          <span class="material-symbols-outlined">dark_mode</span>
+        </button>
+        <button class="login-btn" id="auth-btn">
+          <span class="material-symbols-outlined" style="font-size:18px">person</span>
+          <span>Login</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Dynamic Content -->
+    <div id="content"></div>
+  </main>
+
+  <!-- FAB -->
+  <button id="fab" aria-label="Create new">
+    <span class="material-symbols-outlined" style="font-size:28px">add</span>
+  </button>
+
+  <!-- FAB Menu -->
+  <div class="fab-menu" id="fab-menu">
+    <div class="fab-menu-item" data-action="new-folder">
+      <span class="material-symbols-outlined">create_new_folder</span>New Folder
+    </div>
+    <div class="fab-menu-item" data-action="upload-files">
+      <span class="material-symbols-outlined">upload_file</span>Upload Files
+    </div>
+    <div class="fab-menu-item" data-action="upload-folder">
+      <span class="material-symbols-outlined">folder_open</span>Upload Folder
+    </div>
+    <div class="fab-menu-item" data-action="add-link">
+      <span class="material-symbols-outlined">add_link</span>Google Drive Link
+    </div>
+  </div>
+
+  <!-- Modal -->
+  <div id="modal-overlay" role="dialog" aria-modal="true">
+    <div class="modal" id="modal"></div>
+  </div>
+
+  <!-- Context Menu -->
+  <div id="context-menu" role="menu"></div>
+
+  <!-- Toasts -->
+  <div id="toast-container" aria-live="polite"></div>
+</div>
+
+<!-- Hidden file inputs -->
+<input type="file" id="file-input" multiple hidden>
+<input type="file" id="folder-input" webkitdirectory hidden>
+
+</body>
+
+<script src="script.js"></script>
+
+</html>

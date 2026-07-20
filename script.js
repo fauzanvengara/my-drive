@@ -1079,7 +1079,7 @@ async function render() {
    FOLDER TREE (Sidebar)
    ============================================ */
 async function renderFolderTree() {
-  const folders = await db.getAll('folders');
+  const folders = await getDriveFolders();
   const rootFolders = folders.filter(f => !f.parentId && !f.isDriveLink);
 
   function buildTree(parentId) {

@@ -1,4 +1,34 @@
 /* ============================================
+   GOOGLE DRIVE API
+   ============================================ */
+
+async function getDriveItems() {
+  const res = await fetch("/.netlify/functions/listFiles");
+
+  if (!res.ok) {
+    throw new Error("Cannot connect to Google Drive");
+  }
+
+  return await res.json();
+}
+
+async function getDriveFolders() {
+  const items = await getDriveItems();
+
+  return items
+    .filter(item => item.mimeType === "application/vnd.google-apps.folder")
+    .map(folder => ({
+      id: folder.id,
+      name: folder.name,
+      parentId: null,
+      color: "#3B82F6",
+      isDriveLink: false,
+      createdAt: Date.parse(folder.modifiedTime),
+      updatedAt: Date.parse(folder.modifiedTime)
+    }));
+}
+
+/* ============================================
    DATABASE LAYER (IndexedDB)
    ============================================ */
 class Database {

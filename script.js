@@ -1028,19 +1028,16 @@ document.getElementById('context-menu').addEventListener('click', (e) => {
    FILE DOWNLOAD
    ============================================ */
 async function downloadFile(id) {
-  const file = await db.get('files', id);
-  if (!file || !file.data) { toast('File not found', 'error'); return; }
-  const url = URL.createObjectURL(file.data);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = file.name;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
-  toast(`Downloading ${file.name}`, 'info');
+  try {
+    window.open(
+      `/.netlify/functions/downloadFile?id=${encodeURIComponent(id)}`,
+      "_blank"
+    );
+  } catch (err) {
+    console.error(err);
+    toast("Unable to open file", "error");
+  }
 }
-
 /* ============================================
    NAVIGATION
    ============================================ */

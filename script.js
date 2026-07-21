@@ -1232,8 +1232,14 @@ async function renderFileView() {
     files = allFiles.filter(f => f.name.toLowerCase().includes(state.searchQuery));
   } else {
     /* Normal mode: show contents of current folder */
-    folders = (await db.getByIndex('folders', 'parentId', state.currentFolderId)).filter(f => !f.isDriveLink);
-    files = await db.getByIndex('files', 'folderId', state.currentFolderId);
+    folders = await getDriveFolders();
+    files = await getDriveFiles(state.currentFolderId || "");
+    
+    if (!state.currentFolderId) {
+      folders = folders.filter(f => !f.parentId);
+    } else {
+      folders = [];
+    }
   }
 
   /* Sort: folders first, then by name */

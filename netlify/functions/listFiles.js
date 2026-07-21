@@ -1,10 +1,12 @@
 const { getDrive } = require("./auth");
 
-exports.handler = async () => {
+exports.handler = async (event) => {
   try {
     const drive = await getDrive();
 
-    const folderId = process.env.DRIVE_FOLDER_ID;
+    const folderId =
+      event.queryStringParameters?.folderId ||
+      process.env.DRIVE_FOLDER_ID;
 
     const response = await drive.files.list({
       q: `'${folderId}' in parents and trashed = false`,

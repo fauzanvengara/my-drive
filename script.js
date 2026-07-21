@@ -28,6 +28,24 @@ async function getDriveFolders() {
     }));
 }
 
+async function getDriveFiles(folderId = "") {
+  const url = folderId
+    ? `/.netlify/functions/listFiles?folderId=${encodeURIComponent(folderId)}`
+    : "/.netlify/functions/listFiles";
+
+  const response = await fetch(url);
+
+  if (!response.ok) {
+    throw new Error("Cannot connect to Google Drive");
+  }
+
+  const items = await response.json();
+
+  return items.filter(
+    item => item.mimeType !== "application/vnd.google-apps.folder"
+  );
+}
+
 /* ============================================
    DATABASE LAYER (IndexedDB)
    ============================================ */
@@ -889,7 +907,7 @@ async function deleteFolderRecursive(folderId) {
 
 /* Move file to folder modal */
 async function showMoveModal(type, id) {
-  const allFolders = await db.getAll('folders');
+  const allFolders = await getDriveFolders();
   const item = await db.get(type === 'folder' ? 'folders' : 'files', id);
   if (!item) return;
 
@@ -1138,11 +1156,11 @@ async function renderBreadcrumbs() {
    DASHBOARD VIEW
    ============================================ */
 async function renderDashboard() {
-  const allFiles = await db.getAll('files');
-  const allFolders = await db.getAll('folders');
-  const realFolders = allFolders.filter(f => !f.isDriveLink);
-  const totalSize = allFiles.reduce((sum, f) => sum + (f.size || 0), 0);
-  const recentFiles = [...allFiles].sort((a, b) => b.createdAt - a.createdAt).slice(0, 8);
+  const allFiles = await getDriveFiles();
+  const allFolders = await getDriveFolders();
+  const realFolders = allFolders;
+  const totalSize = allFiles.reduce((sum, f) => sum + Number(f.size || 0), 0);
+  const recentFiles = [...allFiles].sort((a, b) => new Date(b.modifiedTime) - new Date(a.modifiedTime)).slice(0, 8);
 
   const recentHTML = recentFiles.length > 0 ? recentFiles.map(f => {
     const ft = getFileType(f.name, f.type);
@@ -1152,9 +1170,9 @@ async function renderDashboard() {
       </div>
       <div class="recent-file-info">
         <div class="recent-file-name">${f.name}</div>
-        <div class="recent-file-meta">${formatDate(f.createdAt)}</div>
+        <div class="recent-file-meta">${formatDate(new Date(f.modifiedTime).getTime())}</div>
       </div>
-      <div class="recent-file-size">${formatSize(f.size)}</div>
+      <div class="recent-file-size">${formatSize(Number(f.size || 0))}</div>
     </div>`;
   }).join('') : '<p style="padding:16px;color:var(--text-tertiary);font-size:14px">No files yet</p>';
 
@@ -1189,7 +1207,7 @@ async function renderDashboard() {
         <div class="stat-icon" style="background:rgba(5,150,105,0.1);color:#059669">
           <span class="material-symbols-outlined">link</span>
         </div>
-        <div class="stat-value">${allFolders.filter(f => f.isDriveLink).length}</div>
+        <div class="stat-value">0</div>
         <div class="stat-label">Shared Links</div>
       </div>
     </div>
@@ -1209,8 +1227,7 @@ async function renderFileView() {
 
   if (state.searchQuery) {
     /* Search mode: find matching folders and files globally */
-    const allFolders = await db.getAll('folders');
-    const allFiles = await db.getAll('files');
+    const allFolders = await getDriveFolders();
     folders = allFolders.filter(f => !f.isDriveLink && f.name.toLowerCase().includes(state.searchQuery));
     files = allFiles.filter(f => f.name.toLowerCase().includes(state.searchQuery));
   } else {
@@ -1279,7 +1296,7 @@ function renderGridView(folders, files) {
         ${isImage ? `<img data-thumbnail="${f.id}" alt="${f.name}">` : `<span class="material-symbols-outlined" style="font-size:48px;color:${ft.color}">${ft.icon}</span>`}
       </div>
       <div class="file-card-name" title="${f.name}">${f.name}</div>
-      <div class="file-card-meta">${formatSize(f.size)} &middot; ${formatDate(f.createdAt)}</div>
+      <div class="file-card-meta">${formatSize(Number(f.size || 0))} &middot; ${formatDate(new Date(f.modifiedTime).getTime())}</div>
     </div>`;
   }).join('');
 
@@ -1312,8 +1329,8 @@ function renderListView(folders, files) {
         <span class="material-symbols-outlined" style="font-size:22px">${ft.icon}</span>
       </div>
       <div class="file-list-name">${f.name}</div>
-      <div class="file-list-size">${formatSize(f.size)}</div>
-      <div class="file-list-date">${formatDate(f.createdAt)}</div>
+      <div class="file-list-size">${formatSize(Number(f.size || 0))}</div>
+      <div class="file-list-date">${formatDate(new Date(f.modifiedTime).getTime())}</div>
       <button class="file-list-more" data-context-type="file" data-context-id="${f.id}" title="More actions">
         <span class="material-symbols-outlined" style="font-size:20px">more_vert</span>
       </button>
@@ -1327,8 +1344,10 @@ function renderListView(folders, files) {
    RECENT VIEW
    ============================================ */
 async function renderRecentView() {
-  const allFiles = await db.getAll('files');
-  const recent = [...allFiles].sort((a, b) => b.createdAt - a.createdAt).slice(0, 50);
+  const allFiles = await getDriveFiles();
+  const recent = [...allFiles]
+    .sort((a, b) => new Date(b.modifiedTime) - new Date(a.modifiedTime))
+    .slice(0, 50);
 
   if (recent.length === 0) {
     return `<div class="file-toolbar"><h2>Recent</h2></div>
@@ -1347,8 +1366,8 @@ async function renderRecentView() {
         <span class="material-symbols-outlined" style="font-size:22px">${ft.icon}</span>
       </div>
       <div class="file-list-name">${f.name}</div>
-      <div class="file-list-size">${formatSize(f.size)}</div>
-      <div class="file-list-date">${formatDate(f.createdAt)}</div>
+      <div class="file-list-size">${formatSize(Number(f.size || 0))}</div>
+      <div class="file-list-date">${formatDate(new Date(f.modifiedTime).getTime())}</div>
       <button class="file-list-more" data-context-type="file" data-context-id="${f.id}" title="More actions">
         <span class="material-symbols-outlined" style="font-size:20px">more_vert</span>
       </button>
@@ -1364,8 +1383,8 @@ async function renderRecentView() {
    ALL FOLDERS VIEW
    ============================================ */
 async function renderAllFoldersView() {
-  const allFolders = await db.getAll('folders');
-  const realFolders = allFolders.filter(f => !f.isDriveLink);
+  const allFolders = await getDriveFolders();
+  const realFolders = allFolders;
 
   if (realFolders.length === 0) {
     return `<div class="file-toolbar"><h2>All Folders</h2></div>
@@ -1382,7 +1401,7 @@ async function renderAllFoldersView() {
         <span class="material-symbols-outlined" style="font-size:56px;color:${f.color}">folder</span>
       </div>
       <div class="file-card-name" title="${f.name}">${f.name}</div>
-      <div class="file-card-meta">${formatDate(f.createdAt)}</div>
+      <div class="file-card-meta">${formatDate(new Date(f.modifiedTime).getTime())}</div>
     </div>
   `).join('');
 
@@ -1394,7 +1413,7 @@ async function renderAllFoldersView() {
    SHARED LINKS VIEW
    ============================================ */
 async function renderSharedLinksView() {
-  const allFolders = await db.getAll('folders');
+  const allFolders = await getDriveFolders();
   const links = allFolders.filter(f => f.isDriveLink);
 
   if (links.length === 0) {

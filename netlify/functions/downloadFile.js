@@ -1,48 +1,37 @@
+const { google } = require("googleapis");
 const { getDrive } = require("./auth");
 
 exports.handler = async (event) => {
   try {
-    const drive = await getDrive();
-
     const fileId = event.queryStringParameters?.id;
 
     if (!fileId) {
       return {
         statusCode: 400,
-        body: "Missing file id",
+        body: "Missing file id"
       };
     }
 
-    const meta = await drive.files.get({
+    const drive = await getDrive();
+
+    const file = await drive.files.get({
       fileId,
-      fields: "name,mimeType",
+      fields: "webViewLink, webContentLink"
     });
 
-    const file = await drive.files.get(
-      {
-        fileId,
-        alt: "media",
-      },
-      {
-        responseType: "stream",
-      }
-    );
-
     return {
-      statusCode: 200,
+      statusCode: 302,
       headers: {
-        "Content-Type": meta.data.mimeType,
-        "Content-Disposition": `inline; filename="${meta.data.name}"`,
+        Location: file.data.webContentLink || file.data.webViewLink
       },
-      body: file.data,
-      isBase64Encoded: false,
+      body: ""
     };
   } catch (err) {
     console.error(err);
 
     return {
       statusCode: 500,
-      body: err.message,
+      body: err.message
     };
   }
 };

@@ -41,9 +41,18 @@ async function getDriveFiles(folderId = "") {
 
   const items = await response.json();
 
-  return items.filter(
-    item => item.mimeType !== "application/vnd.google-apps.folder"
-  );
+  return items
+    .filter(item => item.mimeType !== "application/vnd.google-apps.folder")
+    .map(item => ({
+      id: item.id,
+      name: item.name,
+      type: item.mimeType,
+      size: Number(item.size || 0),
+      folderId: folderId || null,
+      createdAt: Date.parse(item.modifiedTime),
+      updatedAt: Date.parse(item.modifiedTime),
+      driveId: item.id
+    }));
 }
 
 /* ============================================

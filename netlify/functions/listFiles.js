@@ -10,7 +10,7 @@ exports.handler = async (event) => {
 
     const response = await drive.files.list({
       q: `'${folderId}' in parents and trashed = false`,
-      fields: "files(id,name,mimeType,size,modifiedTime)",
+      fields: "files(id,name,mimeType,size,modifiedTime,thumbnailLink)",
       orderBy: "folder,name",
     });
 

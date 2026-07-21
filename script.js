@@ -1308,7 +1308,7 @@ function renderGridView(folders, files) {
     return `<div class="file-card" data-action="download" data-file-id="${f.id}" data-context-type="file" data-context-id="${f.id}" draggable="true" style="animation-delay:${(folders.length + i) * 0.03}s">
       <div class="file-card-checkbox" data-select="file" data-id="${f.id}"></div>
       <div class="file-card-preview">
-        ${isImage ? `<img data-thumbnail="${f.id}" alt="${f.name}">` : `<span class="material-symbols-outlined" style="font-size:48px;color:${ft.color}">${ft.icon}</span>`}
+        ${isImage ? `<img src="${f.thumbnailLink || ''}" alt="${f.name}">` : `<span class="material-symbols-outlined" style="font-size:48px;color:${ft.color}">${ft.icon}</span>`}
       </div>
       <div class="file-card-name" title="${f.name}">${f.name}</div>
       <div class="file-card-meta">${formatSize(Number(f.size || 0))} &middot; ${formatDate(new Date(f.modifiedTime).getTime())}</div>
@@ -1555,17 +1555,6 @@ function bindContentEvents() {
       e.preventDefault();
       e.stopPropagation();
       showContextMenu(e, 'folder', item.dataset.contextId);
-    });
-  });
-
-  /* Load image thumbnails */
-  content.querySelectorAll('img[data-thumbnail]').forEach(img => {
-    db.get('files', img.dataset.thumbnail).then(file => {
-      if (file && file.data) {
-        const url = URL.createObjectURL(file.data);
-        img.src = url;
-        img.onload = () => URL.revokeObjectURL(url);
-      }
     });
   });
 
